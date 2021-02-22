@@ -28,11 +28,11 @@ pub trait Traversal<T> where T: Copy + Clone + Debug {
     fn levelorder(&self) -> Vec<Vec<Node<T>>>;
     fn spiralorder(&self) -> Vec<Node<T>>;
 }
+
 impl<T> Traversal<T> for Tree<T> where T: Clone + Copy + Debug + PartialEq {
     fn preorder(&self) -> Vec<Node<T>> {
         let mut stack = Vec::new();
         let mut result = Vec::new();
-
         stack.push(self.root.clone());
 
         while let Some(node) = stack.pop() {

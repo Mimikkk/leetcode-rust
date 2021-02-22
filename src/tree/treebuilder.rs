@@ -6,10 +6,12 @@ pub struct TreeBuilder<T> where T: Copy + Clone + Debug + PartialEq {
 }
 
 impl<T> TreeBuilder<T> where T: Copy + Clone + Debug + PartialEq {
-    pub fn new() -> Self { TreeBuilder { tree: Tree::new() } }
+    pub fn empty() -> Tree<T> { Tree::new() }
 
-    pub fn with_root(mut self, node: Node<T>) -> Self {
-        self.tree.root = Some(node);
+    pub fn new() -> Self { TreeBuilder { tree: Self::empty() } }
+
+    pub fn with_root(mut self, node: Option<Node<T>>) -> Self {
+        self.tree.root = node;
         self
     }
 

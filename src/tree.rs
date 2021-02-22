@@ -3,8 +3,9 @@ use includes::*;
 
 type Node<T> = Rc<RefCell<TreeNode<T>>>;
 
-pub(crate) mod treenode;
-pub(crate) mod traversal;
+pub mod treenode;
+pub mod traversal;
+pub mod operations;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Tree<T> where T: Copy + Clone + Debug {

@@ -2,6 +2,7 @@ use crate::tree::treebuilder::TreeBuilder;
 use either::*;
 use crate::tree::Tree;
 use crate::tree::traversal::{Traversal, TraversalDirection};
+use crate::tree::operations::Combinatorics;
 
 struct ExampleTree {
     tree: Tree<i32>
@@ -36,5 +37,9 @@ fn example_levelorder() {
 #[test]
 fn example_spiralorder() {
     assert_eq!(ExampleTree::new().tree.traverse_values(TraversalDirection::Spiralorder),
-               Left(Vec::<i32>::from([5,3,8,1,4])), "Should return Left([5,8,3,1,4])");
+               Left(Vec::<i32>::from([5,8,3,1,4])), "Should return Left([5,8,3,1,4])");
+}
+#[test]
+fn example_find_leaves() {
+    assert_eq!(ExampleTree::new().tree.find_leaf_values(), [1,4,8], "Should return [1,4,8]");
 }
