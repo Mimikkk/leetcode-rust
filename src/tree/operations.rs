@@ -1,13 +1,9 @@
 use crate::tree::{Tree, Node};
 use std::fmt::Debug;
 use crate::tree::traversal::{TraversalDirection, Traversal};
-use either::Either::Left;
 use crate::tree::treebuilder::TreeBuilder;
 use crate::tree::nodebuilder::NodeBuilder;
-use crate::tree::includes::{TreeNode, RefCell, Rc};
-use std::process::Output;
 use std::ops::Add;
-use std::borrow::BorrowMut;
 use crate::utils::Sorted;
 
 trait Similarity where Self: Sized {
@@ -47,16 +43,18 @@ impl<T> Similarity for Tree<T> where T: Clone + Copy + Debug + PartialEq {
     }
 }
 
-trait Arithmetics {
-    fn sum_of_root_to_leaf_binary(&self) -> usize;
+pub trait Arithmetics {
+    fn sum_of_root_to_leaf_binary(&self) -> i32;
     fn average_level_values(&self) -> Vec<f64>;
-    fn minimum_absolute_difference(&self) -> Vec<usize>;
+    fn minimum_absolute_difference(&self) -> usize;
     fn sum_in_range(&self, low: usize, high: usize) -> usize;
+    fn two_sum(&self, target: i32) -> bool;
+    fn find_smallest_path_by_values(&self) -> Vec<i32>;
 }
 
 impl Arithmetics for Tree<i32> {
-    fn sum_of_root_to_leaf_binary(&self) -> usize {
-        unimplemented!()
+    fn sum_of_root_to_leaf_binary(&self) -> i32 {
+        self.find_paths_values().into_iter().map(|x| x.into_iter().sum::<i32>()).sum()
     }
 
     fn average_level_values(&self) -> Vec<f64> {
@@ -77,6 +75,18 @@ impl Arithmetics for Tree<i32> {
 
     fn sum_in_range(&self, low: usize, high: usize) -> usize {
         unimplemented!()
+    }
+
+    fn two_sum(&self, target: i32) -> bool {
+        let values = self.traverse_values(TraversalDirection::Preorder)
+            .unwrap_left().sorted();
+        values.iter().enumerate().clone().any(|(i, e1)|
+            values.iter().skip(i + 1).enumerate().any(|(j, e2)| e1 + e2 == target))
+    }
+
+    fn find_smallest_path_by_values(&self) -> Vec<i32> {
+        self.find_paths_values().into_iter().map(|path|
+            path.into_iter().rev().collect::<Vec<i32>>()).min().unwrap()
     }
 }
 
@@ -123,6 +133,8 @@ impl<T> Depth for Tree<T> where T: Copy + Clone + Debug {
 pub trait Combinatorics<T> where T: Copy + Clone + Debug {
     fn find_leaves(&self) -> Vec<Node<T>>;
     fn find_leaf_values(&self) -> Vec<T>;
+    fn find_paths(&self) -> Vec<Vec<Node<T>>>;
+    fn find_paths_values(&self) -> Vec<Vec<T>>;
 }
 
 impl<T> Combinatorics<T> for Tree<T> where T: Copy + Clone + Debug + PartialEq {
@@ -134,6 +146,28 @@ impl<T> Combinatorics<T> for Tree<T> where T: Copy + Clone + Debug + PartialEq {
 
     fn find_leaf_values(&self) -> Vec<T> {
         self.find_leaves().into_iter().map(|x| x.borrow().value).collect()
+    }
+
+    fn find_paths(&self) -> Vec<Vec<Node<T>>> {
+        fn recursive<T: Copy + Clone + Debug>(node: Option<Node<T>>, mut path: Vec<Node<T>>, paths: &mut Vec<Vec<Node<T>>>) {
+            if let Some(node) = node {
+                path.push(node.clone());
+                let node = node.borrow();
+                if node.left.is_none() && node.right.is_none() {
+                    paths.push(path.clone());
+                }
+                recursive(node.left.clone(), path.clone(), paths);
+                recursive(node.right.clone(), path.clone(), paths);
+            }
+        }
+        let mut paths = Vec::new();
+        recursive(self.root.clone(), Vec::new(), &mut paths);
+        paths
+    }
+
+    fn find_paths_values(&self) -> Vec<Vec<T>> {
+        self.find_paths().into_iter().map(|path|
+            path.into_iter().map(|n| n.as_ref().borrow().value).collect()).collect()
     }
 }
 
@@ -200,7 +234,7 @@ impl<T> Arrangement for Tree<T> where T: Copy + Debug + Ord {
     }
 
     fn invert(&self) -> Self {
-        fn invert_node<T>(node: Option<Node<T>>) -> Option<Node<T>> {
+        fn invert_node<T: Copy + Debug>(node: Option<Node<T>>) -> Option<Node<T>> {
             match node {
                 None => None,
                 Some(n) => {
