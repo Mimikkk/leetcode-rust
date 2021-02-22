@@ -19,7 +19,6 @@ fn to_num(digits: Vec<u8>) -> u64 {
 }
 
 fn main() {
-    let a = vec![1, 2, 3];
-    println!("{:?}", a.binary_search(&3));
-    println!("{}", to_num(a));
+    let tree = TreeBuilder::example_i32();
+    println!("{}", tree.to_string());
 }

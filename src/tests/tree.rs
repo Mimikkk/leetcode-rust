@@ -45,5 +45,10 @@ fn example_find_leaves() {
 }
 #[test]
 fn example_find_paths() {
-    assert_eq!(ExampleTree::new().tree.find_paths_values(), vec![vec![5, 3, 1], vec![5, 3, 4], vec![5, 8]], "Should return [[5,3,1],[5,3,4],[5,8]]")
+    assert_eq!(ExampleTree::new().tree.find_paths_values(), vec![vec![5, 3, 1], vec![5, 3, 4], vec![5, 8]], "Should return [[5,3,1],[5,3,4],[5,8]]");
+}
+
+#[test]
+fn example_as_string() {
+    assert_eq!(ExampleTree::new().as_string(), String::from("5(3(1)(4))(8)"), "Should return \"5(3(1)(4))(8)\"");
 }
