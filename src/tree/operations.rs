@@ -5,6 +5,9 @@ use crate::tree::treebuilder::TreeBuilder;
 use crate::tree::nodebuilder::NodeBuilder;
 use std::ops::Add;
 use crate::utils::Sorted;
+use num::Num;
+use crate::tree::includes::{TreeNode, RefCell, Rc};
+use std::collections::HashMap;
 
 trait Similarity where Self: Sized {
     fn is_symmetric(&self) -> bool;
@@ -19,7 +22,7 @@ impl<T> Similarity for Tree<T> where T: Clone + Copy + Debug + PartialEq {
                 (None, None) => true,
                 (Some(n1), Some(n2)) => {
                     let (n1, n2) = (n1.borrow(), n2.borrow());
-                    n1.value == n2.value
+                    n1.val == n2.val
                         && is_mirror(&n1.left, &n2.right)
                         && is_mirror(&n1.right, &n2.left)
                 }
@@ -32,7 +35,7 @@ impl<T> Similarity for Tree<T> where T: Clone + Copy + Debug + PartialEq {
     fn is_univalued(&self) -> bool {
         self.preorder().windows(2).all(
             |slice| match slice {
-                [a, b] => a.borrow().value == b.borrow().value,
+                [a, b] => a.borrow().val == b.borrow().val,
                 _ => true
             }
         )
@@ -44,15 +47,29 @@ impl<T> Similarity for Tree<T> where T: Clone + Copy + Debug + PartialEq {
 }
 
 pub trait Arithmetics {
+    fn find_all_modes(&self) -> Vec<i32>;
     fn sum_of_root_to_leaf_binary(&self) -> i32;
     fn average_level_values(&self) -> Vec<f64>;
     fn minimum_absolute_difference(&self) -> usize;
     fn sum_in_range(&self, low: usize, high: usize) -> usize;
     fn two_sum(&self, target: i32) -> bool;
     fn find_smallest_path_by_values(&self) -> Vec<i32>;
+    fn is_valid_bst(&self) -> bool;
 }
 
 impl Arithmetics for Tree<i32> {
+    fn find_all_modes(&self) -> Vec<i32> {
+        let mut map: HashMap<i32, usize> = HashMap::new();
+        self.traverse_values(TraversalDirection::Preorder).unwrap_left()
+            .into_iter().for_each(|e| *map.entry(e).or_default() += 1);
+
+        match map.iter().max_by_key(|(_, v)| *v).map(|(_, count)| count.clone()) {
+            Some(max_count) => map.into_iter()
+                .filter(|&(_, count)| count == max_count).map(|(k, _)| k).collect(),
+            None => Vec::new(),
+        }
+    }
+
     fn sum_of_root_to_leaf_binary(&self) -> i32 {
         self.find_paths_values().into_iter().map(|x| x.into_iter().sum::<i32>()).sum()
     }
@@ -87,6 +104,22 @@ impl Arithmetics for Tree<i32> {
     fn find_smallest_path_by_values(&self) -> Vec<i32> {
         self.find_paths_values().into_iter().map(|path|
             path.into_iter().rev().collect::<Vec<i32>>()).min().unwrap()
+    }
+
+    fn is_valid_bst(&self) -> bool {
+        fn is_valid(node: &Option<Node<i32>>, left: i64, right: i64) -> bool {
+            match node {
+                Some(node) => {
+                    let node = node.as_ref().borrow();
+
+                    left < (node.val as i64) && (node.val as i64) < right
+                        && is_valid(&node.left, left, node.val as i64)
+                        && is_valid(&node.right, node.val as i64, right)
+                }
+                None => true
+            }
+        }
+        is_valid(&self.root, i64::MIN, i64::MAX)
     }
 }
 
@@ -145,7 +178,7 @@ impl<T> Combinatorics<T> for Tree<T> where T: Copy + Clone + Debug + PartialEq {
     }
 
     fn find_leaf_values(&self) -> Vec<T> {
-        self.find_leaves().into_iter().map(|x| x.borrow().value).collect()
+        self.find_leaves().into_iter().map(|x| x.borrow().val).collect()
     }
 
     fn find_paths(&self) -> Vec<Vec<Node<T>>> {
@@ -167,7 +200,7 @@ impl<T> Combinatorics<T> for Tree<T> where T: Copy + Clone + Debug + PartialEq {
 
     fn find_paths_values(&self) -> Vec<Vec<T>> {
         self.find_paths().into_iter().map(|path|
-            path.into_iter().map(|n| n.as_ref().borrow().value).collect()).collect()
+            path.into_iter().map(|n| n.as_ref().borrow().val).collect()).collect()
     }
 }
 
@@ -182,7 +215,7 @@ impl<T> Operations for Tree<T> where T: Clone + Copy + Debug + Ord + Add<Output=
                 (Some(n1), Some(n2)) => {
                     let (n1, n2) = (n1.borrow(), n2.borrow());
 
-                    NodeBuilder::new(n1.value + n2.value).with_left(
+                    NodeBuilder::new(n1.val + n2.val).with_left(
                         merge_recursive(n1.left.clone(), n2.left.clone())
                     ).with_right(
                         merge_recursive(n1.right.clone(), n2.right.clone())

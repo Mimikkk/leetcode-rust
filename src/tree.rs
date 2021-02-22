@@ -34,7 +34,7 @@ impl<T> ToString for Tree<T> where T: Copy + Clone + Debug {
                         false => String::new(),
                     };
 
-                    format!("{:?}{}{}", node.value, left, right)
+                    format!("{:?}{}{}", node.val, left, right)
                 }
             }
         }

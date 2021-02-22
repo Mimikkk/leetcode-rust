@@ -16,9 +16,9 @@ pub trait Traversal<T> where T: Copy + Clone + Debug {
     fn traverse_values(&self, direction: TraversalDirection) -> Either<Vec<T>, Vec<Vec<T>>> {
         match self.traverse(direction) {
             Left(nodes) => Left(nodes.into_iter().map(|n|
-                n.as_ref().borrow().value).collect()),
+                n.as_ref().borrow().val).collect()),
             Right(levels) => Right(levels.into_iter().map(|l|
-                l.into_iter().map(|n| n.as_ref().borrow().value).collect()).collect()),
+                l.into_iter().map(|n| n.as_ref().borrow().val).collect()).collect()),
         }
     }
 
