@@ -1,4 +1,5 @@
 use num::Integer;
+
 pub trait Sorted {
     fn sorted(&self) -> Self;
 }

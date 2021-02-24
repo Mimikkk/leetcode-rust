@@ -8,6 +8,7 @@ use crate::utils::Sorted;
 use num::Num;
 use crate::tree::includes::{TreeNode, RefCell, Rc};
 use std::collections::HashMap;
+use std::fs::read_to_string;
 
 trait Similarity where Self: Sized {
     fn is_symmetric(&self) -> bool;
@@ -47,17 +48,45 @@ impl<T> Similarity for Tree<T> where T: Clone + Copy + Debug + PartialEq {
 }
 
 pub trait Arithmetics {
+    fn find_least_common_ancestor_bst(&self, a: Option<Node<i32>>, b: Option<Node<i32>>) -> Option<Node<i32>>;
+    fn find_smallest_path_by_values(&self) -> Vec<i32>;
     fn find_all_modes(&self) -> Vec<i32>;
+    fn find_tilt(&self) -> i32;
     fn sum_of_root_to_leaf_binary(&self) -> i32;
+    fn sum_in_range(&self, low: i32, high: i32) -> i32;
+    fn two_sum(&self, target: i32) -> bool;
     fn average_level_values(&self) -> Vec<f64>;
     fn minimum_absolute_difference(&self) -> usize;
-    fn sum_in_range(&self, low: usize, high: usize) -> usize;
-    fn two_sum(&self, target: i32) -> bool;
-    fn find_smallest_path_by_values(&self) -> Vec<i32>;
     fn is_valid_bst(&self) -> bool;
 }
 
 impl Arithmetics for Tree<i32> {
+    fn find_least_common_ancestor_bst(&self, a: Option<Node<i32>>, b: Option<Node<i32>>) -> Option<Node<i32>> {
+        match (a, b) {
+            (Some(a), Some(b)) => {
+                let (a, b) = (a.borrow(), b.borrow());
+                let mut root = self.root.clone();
+                while let Some(node) = root.clone() {
+                    let node = node.borrow();
+                    match i32::max(a.val, b.val) < node.val {
+                        true => root = node.left.clone(),
+                        false => match i32::min(a.val, b.val) > node.val {
+                            true => root = node.right.clone(),
+                            false => return root,
+                        },
+                    }
+                }
+                None
+            }
+            _ => None
+        }
+    }
+
+    fn find_smallest_path_by_values(&self) -> Vec<i32> {
+        self.find_paths_values().into_iter().map(|path|
+            path.into_iter().rev().collect::<Vec<i32>>()).min().unwrap()
+    }
+
     fn find_all_modes(&self) -> Vec<i32> {
         let mut map: HashMap<i32, usize> = HashMap::new();
         self.traverse_values(TraversalDirection::Preorder).unwrap_left()
@@ -70,8 +99,51 @@ impl Arithmetics for Tree<i32> {
         }
     }
 
+    fn find_tilt(&self) -> i32 {
+        fn recursive(node: &Option<Node<i32>>, tilt: &mut i32) -> i32 {
+            match node {
+                Some(node) => {
+                    let node = node.borrow();
+                    let left = recursive(&node.left, tilt);
+                    let right = recursive(&node.right, tilt);
+
+                    *tilt += i32::abs(left - right);
+                    left + right + node.val
+                }
+                None => 0
+            }
+        }
+
+        let mut tilt = 0;
+        recursive(&self.root, &mut tilt);
+        tilt
+    }
+
     fn sum_of_root_to_leaf_binary(&self) -> i32 {
         self.find_paths_values().into_iter().map(|x| x.into_iter().sum::<i32>()).sum()
+    }
+
+    fn sum_in_range(&self, low: i32, high: i32) -> i32 {
+        let mut stack = vec![self.root.clone()];
+        let mut sum = 0;
+
+        while let Some(node) = stack.pop() {
+            if let Some(node) = node {
+                let node = node.borrow();
+                if node.val >= low && node.val <= high { sum += node.val; }
+                if node.val > low { stack.push(node.left.clone()) }
+                if node.val < high { stack.push(node.right.clone()) }
+            }
+        }
+
+        sum
+    }
+
+    fn two_sum(&self, target: i32) -> bool {
+        let values = self.traverse_values(TraversalDirection::Preorder)
+            .unwrap_left().sorted();
+        values.iter().enumerate().clone().any(|(i, e1)|
+            values.iter().skip(i + 1).enumerate().any(|(j, e2)| e1 + e2 == target))
     }
 
     fn average_level_values(&self) -> Vec<f64> {
@@ -88,22 +160,6 @@ impl Arithmetics for Tree<i32> {
             &[a, b] => b - a,
             _ => panic!("Should be impossible"),
         }).min().unwrap() as usize
-    }
-
-    fn sum_in_range(&self, low: usize, high: usize) -> usize {
-        unimplemented!()
-    }
-
-    fn two_sum(&self, target: i32) -> bool {
-        let values = self.traverse_values(TraversalDirection::Preorder)
-            .unwrap_left().sorted();
-        values.iter().enumerate().clone().any(|(i, e1)|
-            values.iter().skip(i + 1).enumerate().any(|(j, e2)| e1 + e2 == target))
-    }
-
-    fn find_smallest_path_by_values(&self) -> Vec<i32> {
-        self.find_paths_values().into_iter().map(|path|
-            path.into_iter().rev().collect::<Vec<i32>>()).min().unwrap()
     }
 
     fn is_valid_bst(&self) -> bool {
@@ -126,6 +182,7 @@ impl Arithmetics for Tree<i32> {
 trait Depth where Self: Sized {
     fn maximum_depth(&self) -> usize;
     fn minimum_depth(&self) -> usize;
+    fn is_height_balanced(&self) -> bool;
 }
 
 impl<T> Depth for Tree<T> where T: Copy + Clone + Debug {
@@ -160,6 +217,27 @@ impl<T> Depth for Tree<T> where T: Copy + Clone + Debug {
         }
 
         find_depth(&self.root)
+    }
+
+    fn is_height_balanced(&self) -> bool {
+        fn recursive<T: Copy + Clone + Debug>(node: &Option<Node<T>>) -> Option<i32> {
+            match node {
+                Some(node) => {
+                    let node = node.borrow();
+                    let left = recursive(&node.left);
+                    let right = recursive(&node.right);
+                    match (left, right) {
+                        (Some(left), Some(right)) => match i32::abs(left - right) > 1 {
+                            true => None,
+                            false => Some(1 + i32::max(left, right)),
+                        },
+                        _ => None
+                    }
+                }
+                None => Some(0),
+            }
+        }
+        recursive(&self.root).is_some()
     }
 }
 
@@ -204,11 +282,13 @@ impl<T> Combinatorics<T> for Tree<T> where T: Copy + Clone + Debug + PartialEq {
     }
 }
 
-trait Operations where Self: Sized {
+pub trait Operations<T> where Self: Sized, T: Clone + Copy + Debug + PartialEq {
     fn merge(&self, other: &Self) -> Self;
+    fn find_value(&self, value: T) -> Vec<Node<T>>;
+    fn is_subtree(&self, other: &Self) -> bool;
 }
 
-impl<T> Operations for Tree<T> where T: Clone + Copy + Debug + Ord + Add<Output=T> {
+impl<T> Operations<T> for Tree<T> where T: Clone + Copy + Debug + Ord + Add<Output=T> {
     fn merge(&self, other: &Tree<T>) -> Self {
         fn merge_recursive<T>(n1: Option<Node<T>>, n2: Option<Node<T>>) -> Option<Node<T>> where T: Clone + Copy + Debug + Ord + Add<Output=T> {
             match (n1, n2) {
@@ -228,6 +308,19 @@ impl<T> Operations for Tree<T> where T: Clone + Copy + Debug + Ord + Add<Output=
         }
 
         TreeBuilder::new().with_root(merge_recursive(self.root.clone(), other.root.clone())).build()
+    }
+
+    fn find_value(&self, value: T) -> Vec<Node<T>> {
+        self.preorder().into_iter().filter(|n| n.borrow().val == value).collect()
+    }
+
+    fn is_subtree(&self, other: &Self) -> bool {
+        match (self.root.clone(), other.root.clone()) {
+            (None, None) => true,
+            (Some(_), Some(subtree)) => self.preorder().into_iter().any(|x| x == subtree),
+            (None, Some(_)) => false,
+            (Some(_), None) => true,
+        }
     }
 }
 

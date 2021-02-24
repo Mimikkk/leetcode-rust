@@ -33,7 +33,6 @@ impl<T> ToString for Tree<T> where T: Copy + Clone + Debug {
                         true => format!("({})", recursive(&node.right)),
                         false => String::new(),
                     };
-
                     format!("{:?}{}{}", node.val, left, right)
                 }
             }

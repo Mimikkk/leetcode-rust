@@ -3,6 +3,7 @@ use either::*;
 use crate::tree::Tree;
 use crate::tree::traversal::{Traversal, TraversalDirection};
 use crate::tree::operations::Combinatorics;
+use crate::tree::operations::Operations;
 
 struct ExampleTree {
     tree: Tree<i32>
@@ -50,5 +51,10 @@ fn example_find_paths() {
 
 #[test]
 fn example_as_string() {
-    assert_eq!(ExampleTree::new().as_string(), String::from("5(3(1)(4))(8)"), "Should return \"5(3(1)(4))(8)\"");
+    assert_eq!(ExampleTree::new().tree.to_string(), String::from("5(3(1)(4))(8)"), "Should return \"5(3(1)(4))(8)\"");
+}
+
+#[test]
+fn example_is_subtree() {
+    assert_eq!(ExampleTree::new().tree.is_subtree(&ExampleTree::new().tree), true, "Should return \"true\"");
 }

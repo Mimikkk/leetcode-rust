@@ -30,6 +30,20 @@ def inorder(node):
     right = f"({inorder(node.right)})" if node.right else ''
     return f"{node.data}{left}{right}"
 
+
+def is_balanced(root):
+    def check(node):
+        if node is None:
+            return 0
+        left = check(node.left)
+        right = check(node.right)
+        if not left == -1 or right == -1 or abs(left - right) > 1:
+            return -1
+        return 1 + max(left, right)
+
+    return check(root) != -1
+
+
 root_ = Node(10)
 root_.left = Node(8)
 root_.right = Node(2)
