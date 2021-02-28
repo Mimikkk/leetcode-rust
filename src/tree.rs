@@ -1,6 +1,5 @@
 pub(crate) mod includes;
 use includes::*;
-use crate::tree::traversal::Traversal;
 
 type Node<T> = Rc<RefCell<TreeNode<T>>>;
 

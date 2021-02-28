@@ -5,10 +5,7 @@ use crate::tree::treebuilder::TreeBuilder;
 use crate::tree::nodebuilder::NodeBuilder;
 use std::ops::Add;
 use crate::utils::Sorted;
-use num::Num;
-use crate::tree::includes::{TreeNode, RefCell, Rc};
 use std::collections::HashMap;
-use std::fs::read_to_string;
 
 trait Similarity where Self: Sized {
     fn is_symmetric(&self) -> bool;
@@ -143,7 +140,7 @@ impl Arithmetics for Tree<i32> {
         let values = self.traverse_values(TraversalDirection::Preorder)
             .unwrap_left().sorted();
         values.iter().enumerate().clone().any(|(i, e1)|
-            values.iter().skip(i + 1).enumerate().any(|(j, e2)| e1 + e2 == target))
+            values.iter().skip(i + 1).any(|e2| e1 + e2 == target))
     }
 
     fn average_level_values(&self) -> Vec<f64> {

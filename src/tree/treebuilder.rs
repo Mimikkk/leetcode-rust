@@ -18,7 +18,7 @@ impl<T> TreeBuilder<T> where T: Copy + Clone + Debug + PartialEq {
     pub fn build(self) -> Tree<T> { self.tree }
 
 
-    pub fn from_json(path: &str) -> Tree<T> { unimplemented!() }
+    pub fn from_json(_path: &str) -> Tree<T> { unimplemented!() }
 }
 
 impl TreeBuilder<i32> {
