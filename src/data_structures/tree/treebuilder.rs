@@ -1,5 +1,5 @@
-use crate::tree::*;
-use crate::tree::nodebuilder::NodeBuilder;
+use crate::data_structures::tree::*;
+use crate::data_structures::tree::nodebuilder::NodeBuilder;
 
 pub struct TreeBuilder<T> where T: Copy + Clone + Debug + PartialEq {
     tree: Tree<T>

@@ -1,6 +1,8 @@
 use std::fs::read_to_string;
 use std::ops::Index;
 use std::collections::HashMap;
+use std::borrow::BorrowMut;
+
 pub fn pascal_triangle_i(num_rows: usize) -> Vec<Vec<i32>> {
     match num_rows {
         0 => vec![],
@@ -144,18 +146,74 @@ pub fn word_pattern(pattern: String, s: String) -> bool {
     }
 }
 
-struct Primes {}
+pub fn add_digits(mut n: i32) -> i32 {
+    loop {
+        if n < 10 { break n; }
+        let mut sum = 0;
 
-impl Primes {
-    pub fn new() -> Self { Self {} }
+        while n > 0 {
+            sum += n % 10;
+            n /= 10;
+        };
+        n = sum;
+    }
 }
 
-impl Iterator for Primes {
-    type Item = u64;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        unimplemented!()
+pub fn is_ugly(n: i32) -> bool {
+    match n > 0 {
+        true => {
+            (2..=5).fold(n, |mut acc, i| loop {
+                if acc % i != 0 { break acc; };
+                acc /= i;
+            }) == 1
+        }
+        false => false,
     }
+}
+
+pub fn count_primes(n: i32) -> i32 {
+    match n > 1 {
+        true => {
+            let mut prime = vec![true; n as usize];
+            if let Some(b) = prime.get_mut(0) {
+                *b = false;
+            }
+            if let Some(b) = prime.get_mut(1) {
+                *b = false;
+            }
+
+            for i in 0..((n as f32).sqrt() + 1f32) as usize {
+                if let Some(&b) = prime.get(i) {
+                    if b {
+                        for j in (i * i..n as usize).step_by(i) {
+                            prime[j] = false
+                        }
+                    }
+                }
+            }
+
+            prime.into_iter().filter(|x| *x).count() as i32
+        }
+        false => 0
+    }
+}
+
+pub fn summary_ranges(nums: Vec<i32>) -> Vec<String> {
+    fn format_ranges(ranges: Vec<(i32, i32)>) -> Vec<String> {
+        ranges.into_iter().map(|(a, b)| match a == b {
+            false => format!("{}->{}", a, b),
+            true => format!("{}", a)
+        }).collect()
+    }
+    if nums.is_empty() { return vec![]; }
+
+    let mut ranges = vec![(nums[0], nums[0])];
+    for num in nums.into_iter().skip(1) {
+        if let Some((_, last)) = ranges.last_mut() {
+            if num - *last == 1 { *last += 1 } else { ranges.push((num, num)) }
+        }
+    }
+    format_ranges(ranges)
 }
 
 #[cfg(test)]
@@ -206,5 +264,17 @@ mod tests {
     fn test_word_pattern() {
         assert_eq!(word_pattern(String::from("abba"), String::from("cat dog dog cat")), true);
         assert_eq!(word_pattern(String::from("abba"), String::from("dog cat cat dog")), true);
+    }
+    #[test]
+    fn test_add_numbers() {
+        assert_eq!(add_digits(38), 2, "Should be 2");
+    }
+    #[test]
+    fn test_if_ugly() {
+        assert_eq!(is_ugly(240), true);
+        assert_eq!(is_ugly(1), true);
+        assert_eq!(is_ugly(128), true);
+        assert_eq!(is_ugly(7), false);
+        assert_eq!(is_ugly(u32::MAX as i32), false);
     }
 }

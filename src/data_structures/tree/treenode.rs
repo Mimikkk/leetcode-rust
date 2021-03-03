@@ -1,4 +1,4 @@
-use crate::tree::*;
+use crate::data_structures::tree::*;
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct TreeNode<T> where T: Copy + Clone + Debug {

@@ -13,7 +13,7 @@ pub struct Tree<T> where T: Copy + Clone + Debug {
 }
 
 impl<T> Tree<T> where T: Copy + Clone + Debug {
-    pub(in crate::tree) fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self { root: None }
     }
 }

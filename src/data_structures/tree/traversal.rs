@@ -1,4 +1,4 @@
-use crate::tree::*;
+use crate::data_structures::tree::*;
 
 pub enum TraversalDirection { Preorder, Inorder, Postorder, Levelorder, Spiralorder }
 pub trait Traversal<T> where T: Copy + Clone + Debug {

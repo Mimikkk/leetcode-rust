@@ -1,9 +1,9 @@
-use crate::tree::treebuilder::TreeBuilder;
+use crate::data_structures::tree::treebuilder::TreeBuilder;
 use either::*;
-use crate::tree::Tree;
-use crate::tree::traversal::{Traversal, TraversalDirection};
-use crate::tree::operations::Combinatorics;
-use crate::tree::operations::Operations;
+use crate::data_structures::tree::Tree;
+use crate::data_structures::tree::traversal::{Traversal, TraversalDirection};
+use crate::data_structures::tree::operations::Combinatorics;
+use crate::data_structures::tree::operations::Operations;
 
 struct ExampleTree {
     tree: Tree<i32>

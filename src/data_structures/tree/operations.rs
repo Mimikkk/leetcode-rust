@@ -1,8 +1,8 @@
-use crate::tree::{Tree, Node};
+use crate::data_structures::tree::{Tree, Node};
 use std::fmt::Debug;
-use crate::tree::traversal::{TraversalDirection, Traversal};
-use crate::tree::treebuilder::TreeBuilder;
-use crate::tree::nodebuilder::NodeBuilder;
+use crate::data_structures::tree::traversal::{TraversalDirection, Traversal};
+use crate::data_structures::tree::treebuilder::TreeBuilder;
+use crate::data_structures::tree::nodebuilder::NodeBuilder;
 use std::ops::Add;
 use crate::utils::Sorted;
 use std::collections::HashMap;
