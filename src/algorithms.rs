@@ -2,6 +2,8 @@ use std::fs::read_to_string;
 use std::ops::Index;
 use std::collections::HashMap;
 use std::borrow::BorrowMut;
+use std::iter;
+use std::cmp::Ordering;
 
 pub fn pascal_triangle_i(num_rows: usize) -> Vec<Vec<i32>> {
     match num_rows {
@@ -216,6 +218,56 @@ pub fn summary_ranges(nums: Vec<i32>) -> Vec<String> {
     format_ranges(ranges)
 }
 
+pub fn intersection(mut nums1: Vec<i32>, mut nums2: Vec<i32>) -> Vec<i32> {
+    nums1.sort();
+    nums2.sort();
+    let mut result: Vec<i32> =
+        nums1.into_iter().filter(|x| nums2.binary_search(x).is_ok()).collect();
+    result.dedup();
+    result
+}
+
+pub fn intersect2(mut nums1: Vec<i32>, mut nums2: Vec<i32>) -> Vec<i32> {
+    nums1.sort();
+    nums2.sort();
+    let mut result = vec![];
+    while let (Some(&n1), Some(&n2)) = (nums1.last(), nums2.last()) {
+        match n1.cmp(&n2) {
+            Ordering::Less => nums2.pop(),
+            Ordering::Equal => {
+                result.push(n1);
+                nums1.pop();
+                nums2.pop()
+            }
+            Ordering::Greater => nums1.pop(),
+        };
+    }
+    result
+}
+
+pub fn is_perfect_square(x: i32) -> bool {
+    fn bs(left: i64, right: i64, target: i64) -> bool {
+        if left > right { return false; }
+
+        let mid = (left + right) / 2;
+        match (mid * mid).cmp(&target) {
+            Ordering::Less => bs(mid + 1, right, target),
+            Ordering::Equal => true,
+            Ordering::Greater => bs(left, mid - 1, target),
+        }
+    }
+    bs(1, x as i64, x as i64)
+}
+
+pub fn can_construct(ransom_note: String, magazine: String) -> bool {
+    let (mut a, mut b) = (vec![0; 255], vec![0; 255]);
+    for c in ransom_note.into_bytes() { a[c as usize] += 1; }
+    for c in ransom_note.into_bytes() { b[c as usize] += 1; }
+
+    a.into_iter().enumerate().all(|(i, n)| b[i] >= n)
+}
+
+
 #[cfg(test)]
 mod tests {
     use crate::algorithms::*;
@@ -276,5 +328,9 @@ mod tests {
         assert_eq!(is_ugly(128), true);
         assert_eq!(is_ugly(7), false);
         assert_eq!(is_ugly(u32::MAX as i32), false);
+    }
+    #[test]
+    fn test_intersection() {
+        assert_eq!(intersection(vec![1, 2, 3, 4, 5], vec![5, 3, 7]), vec![3, 5])
     }
 }
