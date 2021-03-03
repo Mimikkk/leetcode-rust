@@ -2,7 +2,6 @@ use std::fs::read_to_string;
 use std::ops::Index;
 use std::collections::HashMap;
 use std::borrow::BorrowMut;
-use std::iter;
 use std::cmp::Ordering;
 
 pub fn pascal_triangle_i(num_rows: usize) -> Vec<Vec<i32>> {
@@ -262,7 +261,7 @@ pub fn is_perfect_square(x: i32) -> bool {
 pub fn can_construct(ransom_note: String, magazine: String) -> bool {
     let (mut a, mut b) = (vec![0; 255], vec![0; 255]);
     for c in ransom_note.into_bytes() { a[c as usize] += 1; }
-    for c in ransom_note.into_bytes() { b[c as usize] += 1; }
+    for c in magazine.into_bytes() { b[c as usize] += 1; }
 
     a.into_iter().enumerate().all(|(i, n)| b[i] >= n)
 }
