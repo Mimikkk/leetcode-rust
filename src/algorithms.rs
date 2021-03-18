@@ -76,39 +76,6 @@ pub fn two_sum2(mut nums: Vec<i32>, target: i32) -> Vec<i32> {
 }
 
 
-
-// def addTwoNumbers(self, l1: ListNode, l2: ListNode) -> ListNode:
-// head = cur = ListNode(0)
-// carry:bool = False
-// while l1 and l2:
-//     cur.next = ListNode(val)
-//     cur = cur.next
-//     l1 = l1.next
-//     l2 = l2.next
-// if l1:
-//     while l1:
-//         val = l1.val + carry
-//         carry = False
-//         if val>9:
-//             val%=10
-//             carry=True
-//         cur.next = ListNode(val)
-//         cur = cur.next
-//         l1 = l1.next
-// else:
-//     while l2:
-//         val = l2.val + carry
-//         carry = False
-//         if val>9:
-//             val%=10
-//             carry=True
-//         cur.next = ListNode(val)
-//         cur = cur.next
-//         l2 = l2.next
-// if carry:
-//     cur.next = ListNode(1)
-// return head.next
-
 pub fn convert_title_to_number(s: String) -> i32 {
     s.chars().fold(0, |acc, c| acc * 26 + c as i32 - 64)
 }
