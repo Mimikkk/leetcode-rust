@@ -3,6 +3,8 @@ use std::ops::Index;
 use std::collections::HashMap;
 use std::borrow::BorrowMut;
 use std::cmp::Ordering;
+use std::iter;
+use crate::utils::Sorted;
 
 pub fn pascal_triangle_i(num_rows: usize) -> Vec<Vec<i32>> {
     match num_rows {
@@ -58,6 +60,54 @@ pub fn two_sum(numbers: Vec<i32>, target: i32) -> Vec<i32> {
 
     vec![]
 }
+
+pub fn two_sum2(mut nums: Vec<i32>, target: i32) -> Vec<i32> {
+    let mut nums: Vec<(usize, i32)> = nums.into_iter().enumerate().collect();
+    nums.sort_by_key(|&(i, _)| i);
+
+    match (0..nums.len()).find_map(|i| (i + 1..nums.len()).find_map(|j|
+        match nums[i].1 + nums[j].1 == target {
+            true => Some(vec![nums[i].0 as i32, nums[j].0 as i32]),
+            false => None
+        })) {
+        Some(val) => val,
+        None => vec![-1, -1],
+    }
+}
+
+
+
+// def addTwoNumbers(self, l1: ListNode, l2: ListNode) -> ListNode:
+// head = cur = ListNode(0)
+// carry:bool = False
+// while l1 and l2:
+//     cur.next = ListNode(val)
+//     cur = cur.next
+//     l1 = l1.next
+//     l2 = l2.next
+// if l1:
+//     while l1:
+//         val = l1.val + carry
+//         carry = False
+//         if val>9:
+//             val%=10
+//             carry=True
+//         cur.next = ListNode(val)
+//         cur = cur.next
+//         l1 = l1.next
+// else:
+//     while l2:
+//         val = l2.val + carry
+//         carry = False
+//         if val>9:
+//             val%=10
+//             carry=True
+//         cur.next = ListNode(val)
+//         cur = cur.next
+//         l2 = l2.next
+// if carry:
+//     cur.next = ListNode(1)
+// return head.next
 
 pub fn convert_title_to_number(s: String) -> i32 {
     s.chars().fold(0, |acc, c| acc * 26 + c as i32 - 64)
@@ -266,10 +316,26 @@ pub fn can_construct(ransom_note: String, magazine: String) -> bool {
     a.into_iter().enumerate().all(|(i, n)| b[i] >= n)
 }
 
+pub fn find_the_difference(s: String, t: String) -> char {
+    let (s, l) = if s.len() > t.len() { (t, s) } else { (s, t) };
+    for (c1, c2) in l.chars().zip(s.chars().chain(iter::repeat('\0'))) {
+        match (c1, c2) {
+            (_, _) => {}
+        }
+    };
+    'c'
+}
+
+pub fn read_binary_watch(n: i32) -> Vec<String> {
+    let n = n as u32;
+    (0..1024u16).filter(|x| x.count_ones() == n).filter(|x| (x & 0b1111) < 12)
+        .map(|i| format!("{}:{:0>2}", i & 0b1111, i >> 4)).collect::<Vec<_>>().sorted()
+}
 
 #[cfg(test)]
 mod tests {
     use crate::algorithms::*;
+    use crate::utils::Sorted;
     #[test]
     fn test_title_to_number() {
         assert_eq!(convert_title_to_number(String::from("A")), 1, "Should be 1");
@@ -331,5 +397,20 @@ mod tests {
     #[test]
     fn test_intersection() {
         assert_eq!(intersection(vec![1, 2, 3, 4, 5], vec![5, 3, 7]), vec![3, 5])
+    }
+    #[test]
+    fn test_read_binary_watch() {
+        assert_eq!(read_binary_watch(1),
+                   ["1:00", "2:00", "4:00", "8:00", "0:01", "0:02", "0:04", "0:08", "0:16", "0:32"]
+                       .iter().map(|&x| String::from(x)).collect::<Vec<_>>().sorted());
+        assert_eq!(read_binary_watch(2),
+                   [
+                       "0:03", "0:05", "0:06", "0:09", "0:10", "0:12", "0:17", "0:18", "0:20",
+                       "0:24", "0:33", "0:34", "0:36", "0:40", "0:48", "1:01", "1:02", "1:04",
+                       "1:08", "1:16", "1:32", "2:01", "2:02", "2:04", "2:08", "2:16", "2:32",
+                       "3:00", "4:01", "4:02", "4:04", "4:08", "4:16", "4:32", "5:00", "6:00",
+                       "8:01", "8:02", "8:04", "8:08", "8:16", "8:32", "9:00", "10:00"
+                   ].iter().map(|&x| String::from(x)).collect::<Vec<_>>().sorted()
+        );
     }
 }

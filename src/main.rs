@@ -9,8 +9,12 @@ pub mod data_structures {
 
 
 pub mod utils;
-pub mod algorithms;
 pub mod primes;
+pub mod algorithms;
+pub mod ghost {
+    pub mod firstbatch;
+    pub mod secondbatch;
+}
 
 
 #[cfg(test)]
