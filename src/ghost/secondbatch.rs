@@ -1,5 +1,3 @@
-use std::str::Chars;
-use crate::algorithms::can_construct;
 use std::iter;
 pub fn my_sqrt(x: i32) -> i32 {
     if x < 2 { return x; }
@@ -68,7 +66,7 @@ pub fn str_str(s: String, subs: String) -> i32 {
     let s = s.into_bytes();
     let subs = subs.into_bytes();
 
-    for (i, c) in s.clone().into_iter().enumerate() {
+    for (i, _) in s.clone().into_iter().enumerate() {
         if subs.iter().zip(s.iter().skip(i).chain(iter::repeat(&0)))
             .all(|(c1, c2)| c1 == c2) { return i as i32; }
     }
@@ -109,7 +107,7 @@ pub fn merge_two_lists(mut l1: Option<Node>, mut l2: Option<Node>) -> Option<Nod
     let mut cur: Option<&mut Node> = None;
     return loop {
         match (l1.clone(), l2.clone()) {
-            (Some(n1), Some(n2)) => {}
+            (Some(_), Some(_)) => {}
             (Some(n), None) => {
                 match cur.is_some() {
                     true => {
@@ -142,6 +140,7 @@ pub fn merge_two_lists(mut l1: Option<Node>, mut l2: Option<Node>) -> Option<Nod
         }
     };
 }
+
 pub fn longest_common_prefix(vec: Vec<String>) -> String {
     if vec.is_empty() { return String::new(); }
 

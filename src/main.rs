@@ -1,5 +1,4 @@
 #![allow(dead_code)]
-use crate::algorithms::is_isomorphic;
 
 pub mod data_structures {
     pub mod tree;

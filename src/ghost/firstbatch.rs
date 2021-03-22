@@ -1,7 +1,7 @@
 use std::collections::{HashMap, HashSet};
 
 
-pub fn two_sum(mut nums: Vec<i32>, target: i32) -> Vec<i32> {
+pub fn two_sum(nums: Vec<i32>, target: i32) -> Vec<i32> {
     let mut nums: Vec<(usize, i32)> = nums.into_iter().enumerate().collect();
     nums.sort_by_key(|&(i, _)| i);
 

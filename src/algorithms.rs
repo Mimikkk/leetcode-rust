@@ -1,11 +1,9 @@
-use std::fs::read_to_string;
-use std::ops::Index;
 use std::collections::HashMap;
-use std::borrow::BorrowMut;
 use std::cmp::Ordering;
 use std::iter;
 use crate::utils::Sorted;
 
+// region [[Done]]
 pub fn pascal_triangle_i(num_rows: usize) -> Vec<Vec<i32>> {
     match num_rows {
         0 => vec![],
@@ -61,7 +59,7 @@ pub fn two_sum(numbers: Vec<i32>, target: i32) -> Vec<i32> {
     vec![]
 }
 
-pub fn two_sum2(mut nums: Vec<i32>, target: i32) -> Vec<i32> {
+pub fn two_sum2(nums: Vec<i32>, target: i32) -> Vec<i32> {
     let mut nums: Vec<(usize, i32)> = nums.into_iter().enumerate().collect();
     nums.sort_by_key(|&(i, _)| i);
 
@@ -74,7 +72,6 @@ pub fn two_sum2(mut nums: Vec<i32>, target: i32) -> Vec<i32> {
         None => vec![-1, -1],
     }
 }
-
 
 pub fn convert_title_to_number(s: String) -> i32 {
     s.chars().fold(0, |acc, c| acc * 26 + c as i32 - 64)
@@ -299,10 +296,219 @@ pub fn read_binary_watch(n: i32) -> Vec<String> {
         .map(|i| format!("{}:{:0>2}", i & 0b1111, i >> 4)).collect::<Vec<_>>().sorted()
 }
 
+pub fn my_pow(mut x: f64, n: i32) -> f64 {
+    if n == 0 { return 1f64; }
+    let mut n = n as i64;
+
+    if n < 0 {
+        x = 1f64 / x;
+        n = n.abs();
+    }
+
+    let mut y = 1f64;
+    while n > 1 {
+        if n % 2 == 1 {
+            y *= x;
+            x *= x;
+            n = (n - 1) / 2;
+        } else {
+            x *= x;
+            n /= 2;
+        }
+    }
+    x * y
+}
+
+pub fn super_pow(a: i32, mut b: Vec<i32>) -> i32 {
+    fn powmod(a: i32, b: i32) -> i32 {
+        (0..b).fold((1, a % 1337), |(result, a), _| ((result * a) % 1337, a)).0
+    }
+
+    match b.pop() {
+        Some(last_digit) => powmod(super_pow(a, b), 10) * powmod(a, last_digit) % 1337,
+        None => 1,
+    }
+}
+
+pub fn can_jump(nums: Vec<i32>) -> bool {
+    let (mut i, mut reach, n) = (0, 0, nums.len());
+    while i < n && i <= reach {
+        reach = usize::max(i + nums[i] as usize, reach);
+        i += 1;
+    }
+    i == n
+}
+
+pub fn merge(mut intervals: Vec<Vec<i32>>) -> Vec<Vec<i32>> {
+    let mut result: Vec<Vec<i32>> = vec![];
+    intervals.sort();
+
+    for (head, tail) in intervals.into_iter().map(|row| (row[0], row[1])) {
+        match result.last_mut() {
+            Some(last) =>
+                if last[1] >= head {
+                    last[1] = last[1].max(tail)
+                } else { result.push(vec![head, tail]) },
+            None => result.push(vec![head, tail]),
+        }
+    }
+    result
+}
+
+pub fn unique_paths(n: i32, m: i32) -> i32 {
+    fn n_choose_k(n: i64, k: i64) -> i64 {
+        (1..=k).fold(1, |acc, i| acc * (n - k + i) / i)
+    }
+    n_choose_k((m + n - 2) as i64, (n - 1) as i64) as i32
+}
+/*
+    1     1     1     1     1     1     1     1     1
+    1     2     3     4     5     6     7     8     9
+    1     3     6    10    15    21    28    36    45
+    1     4    10    20    35    56    84   120   165
+    1     5    15    35    70   126   210   330   495
+    1     6    21    56   126   252   462   792  1287
+    1     7    28    84   210   462   924  1716  3003
+    1     8    36   120   330   792  1716  3432  6435
+    1     9    45   165   495  1287  3003  6435 12870
+*/
+pub fn unique_paths_dp(n: i32, m: i32) -> i32 {
+    let (n, m) = (n as usize, m as usize);
+    let mut dp = vec![vec![1; m]; n];
+    (1..n).for_each(|i| (1..m).for_each(|j| dp[i][j] = dp[i - 1][j] + dp[i][j - 1]));
+    dp[n - 1][m - 1]
+}
+
+pub fn unique_paths_with_obstacles(obstacle_grid: Vec<Vec<i32>>) -> i32 {
+    let (n, m) = (obstacle_grid.len(), obstacle_grid[0].len());
+    let mut dp = vec![vec![0; m]; n];
+    dp[0][0] = if obstacle_grid[0][0] == 1 { 0 } else { 1 };
+    (1..m).for_each(|i| dp[0][i] = if obstacle_grid[0][i] == 1 { 0 } else { dp[0][i - 1] });
+    (1..n).for_each(|i| dp[i][0] = if obstacle_grid[i][0] == 1 { 0 } else { dp[i - 1][0] });
+    (1..n).for_each(|i| (1..m).for_each(|j|
+        dp[i][j] = if obstacle_grid[i][j] == 1 { 0 } else { dp[i - 1][j] + dp[i][j - 1] }
+    ));
+    dp[n - 1][m - 1]
+}
+
+pub fn set_zeroes(matrix: &mut Vec<Vec<i32>>) {
+    let (n, m) = (matrix.len(), matrix[0].len());
+    let mut row_indices = vec![];
+    let mut col_indices = vec![];
+    for i in 0..n {
+        for j in 0..m {
+            if matrix[i][j] == 0 {
+                if !row_indices.contains(&i) { row_indices.push(i) }
+                if !col_indices.contains(&j) { col_indices.push(j) }
+            }
+        }
+    }
+    for r in row_indices { for i in 0..m { matrix[r][i] = 0; } }
+    for c in col_indices { for i in 0..n { matrix[i][c] = 0; } }
+}
+// endregion
+
+pub mod gol {
+    struct LifeGame {
+        current_generation: Vec<Vec<bool>>,
+        n: usize,
+        m: usize,
+    }
+    trait AsBoolean {
+        fn as_bool(&self) -> Vec<Vec<bool>>;
+    }
+    trait AsI32 {
+        fn as_i32(&self) -> Vec<Vec<i32>>;
+    }
+
+    impl AsBoolean for Vec<Vec<i32>> {
+        fn as_bool(&self) -> Vec<Vec<bool>> {
+            let (n, m) = (self.len(), self[0].len());
+            let mut sol = vec![vec![false; m]; n];
+            (0..n).for_each(|i| (0..m).for_each(|j| sol[i][j] = self[i][j] != 0));
+            sol
+        }
+    }
+    impl AsI32 for Vec<Vec<bool>> {
+        fn as_i32(&self) -> Vec<Vec<i32>> {
+            let (n, m) = (self.len(), self[0].len());
+            let mut sol = vec![vec![0; m]; n];
+            (0..n).for_each(|i| (0..m).for_each(|j| sol[i][j] = self[i][j] as i32));
+            sol
+        }
+    }
+    impl AsI32 for LifeGame {
+        fn as_i32(&self) -> Vec<Vec<i32>> {
+            self.current_generation.as_i32()
+        }
+    }
+
+    impl LifeGame {
+        fn new(board: &mut Vec<Vec<i32>>) -> Self {
+            match board.is_empty() {
+                true => Self { current_generation: vec![], n: 0, m: 0 },
+                false => Self { current_generation: board.as_bool(), n: board.len(), m: board[0].len() },
+            }
+        }
+
+
+        const NEIGHS: [(i32, i32); 8] =
+            [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)];
+        fn count_neighbours(&self, i: usize, j: usize) -> usize {
+            let mut neighbour_count = 0;
+            for &(x, y) in Self::NEIGHS.iter()
+                .filter(|(a, b)| self.is_valid_cell(i as i32 + a, j as i32 + b)) {
+                neighbour_count += self.current_generation[x as usize][y as usize] as usize;
+            }
+            neighbour_count
+        }
+        fn is_valid_cell(&self, i: i32, j: i32) -> bool {
+            i > 0 && i < self.n as i32 && j > 0 && j < self.m as i32
+        }
+        fn is_alive(&self, i: usize, j: usize) -> bool {
+            match self.count_neighbours(i, j) {
+                2..=3 => true,
+                _ => false,
+            }
+        }
+
+        fn next_generation(&self) -> Vec<Vec<bool>> {
+            let mut next_gen = self.current_generation.clone();
+
+            for i in 0..self.n {
+                for j in 0..self.m {
+                    next_gen[i][j] = self.is_alive(i, j);
+                }
+            }
+
+            next_gen
+        }
+
+        fn solve(&mut self) {
+            loop {
+                let next_gen = self.next_generation();
+                if self.current_generation == next_gen { break; }
+                self.current_generation = next_gen;
+            }
+        }
+        fn solved(mut self) -> Self {
+            self.solve();
+            self
+        }
+    }
+
+
+    pub fn game_of_life(board: &mut Vec<Vec<i32>>) {
+        *board = LifeGame::new(board).solved().as_i32();
+    }
+}
+
+
 #[cfg(test)]
 mod tests {
     use crate::algorithms::*;
     use crate::utils::Sorted;
+    // region [[Done]]
     #[test]
     fn test_title_to_number() {
         assert_eq!(convert_title_to_number(String::from("A")), 1, "Should be 1");
@@ -379,5 +585,14 @@ mod tests {
                        "8:01", "8:02", "8:04", "8:08", "8:16", "8:32", "9:00", "10:00"
                    ].iter().map(|&x| String::from(x)).collect::<Vec<_>>().sorted()
         );
+    }
+    // endregion
+    #[test]
+    fn test_uni_paths_dp() {
+        for i in 1..10 {
+            for j in 1..10 {
+                assert_eq!(unique_paths_dp(i, j), unique_paths(i, j));
+            }
+        }
     }
 }
