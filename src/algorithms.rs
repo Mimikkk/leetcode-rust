@@ -2,8 +2,9 @@ use std::collections::HashMap;
 use std::cmp::Ordering;
 use std::iter;
 use crate::utils::Sorted;
+use std::fs::read_to_string;
 
-// region [[Done]]
+// region [[Skończone]]
 pub fn pascal_triangle_i(num_rows: usize) -> Vec<Vec<i32>> {
     match num_rows {
         0 => vec![],
@@ -406,10 +407,9 @@ pub fn set_zeroes(matrix: &mut Vec<Vec<i32>>) {
     for r in row_indices { for i in 0..m { matrix[r][i] = 0; } }
     for c in col_indices { for i in 0..n { matrix[i][c] = 0; } }
 }
-// endregion
 
 pub mod gol {
-    struct LifeGame {
+    pub struct LifeGame {
         current_generation: Vec<Vec<bool>>,
         n: usize,
         m: usize,
@@ -417,7 +417,7 @@ pub mod gol {
     trait AsBoolean {
         fn as_bool(&self) -> Vec<Vec<bool>>;
     }
-    trait AsI32 {
+    pub trait AsI32 {
         fn as_i32(&self) -> Vec<Vec<i32>>;
     }
 
@@ -444,7 +444,7 @@ pub mod gol {
     }
 
     impl LifeGame {
-        fn new(board: &mut Vec<Vec<i32>>) -> Self {
+        pub fn new(board: &mut Vec<Vec<i32>>) -> Self {
             match board.is_empty() {
                 true => Self { current_generation: vec![], n: 0, m: 0 },
                 false => Self { current_generation: board.as_bool(), n: board.len(), m: board[0].len() },
@@ -454,25 +454,28 @@ pub mod gol {
 
         const NEIGHS: [(i32, i32); 8] =
             [(-1, -1), (-1, 0), (-1, 1), (0, -1), (0, 1), (1, -1), (1, 0), (1, 1)];
+
+        fn is_alive(&self, i: usize, j: usize) -> bool {
+            match self.count_neighbours(i, j) {
+                2 => self.current_generation[i][j],
+                3 => true,
+                _ => false,
+            }
+        }
+        fn is_valid_cell(&self, i: i32, j: i32) -> bool {
+            i >= 0 && i < self.n as i32 && j >= 0 && j < self.m as i32
+        }
         fn count_neighbours(&self, i: usize, j: usize) -> usize {
             let mut neighbour_count = 0;
-            for &(x, y) in Self::NEIGHS.iter()
-                .filter(|(a, b)| self.is_valid_cell(i as i32 + a, j as i32 + b)) {
+            for (x, y) in Self::NEIGHS.iter()
+                .map(|&(a, b)| (i as i32 + a, j as i32 + b))
+                .filter(|&(x, y)| self.is_valid_cell(x, y)) {
                 neighbour_count += self.current_generation[x as usize][y as usize] as usize;
             }
             neighbour_count
         }
-        fn is_valid_cell(&self, i: i32, j: i32) -> bool {
-            i > 0 && i < self.n as i32 && j > 0 && j < self.m as i32
-        }
-        fn is_alive(&self, i: usize, j: usize) -> bool {
-            match self.count_neighbours(i, j) {
-                2..=3 => true,
-                _ => false,
-            }
-        }
 
-        fn next_generation(&self) -> Vec<Vec<bool>> {
+        pub fn next_generation(&self) -> Vec<Vec<bool>> {
             let mut next_gen = self.current_generation.clone();
 
             for i in 0..self.n {
@@ -480,34 +483,126 @@ pub mod gol {
                     next_gen[i][j] = self.is_alive(i, j);
                 }
             }
-
             next_gen
         }
 
-        fn solve(&mut self) {
+        pub fn solve(&mut self) {
             loop {
                 let next_gen = self.next_generation();
                 if self.current_generation == next_gen { break; }
                 self.current_generation = next_gen;
             }
         }
-        fn solved(mut self) -> Self {
+        pub fn solved(mut self) -> Self {
             self.solve();
             self
         }
     }
-
-
-    pub fn game_of_life(board: &mut Vec<Vec<i32>>) {
-        *board = LifeGame::new(board).solved().as_i32();
-    }
 }
 
+pub fn game_of_life(board: &mut Vec<Vec<i32>>) {
+    use crate::algorithms::gol::AsI32;
+    *board = gol::LifeGame::new(board).solved().as_i32();
+}
+
+pub fn subsets(nums: Vec<i32>) -> Vec<Vec<i32>> {
+    (0..2_u32.pow(nums.len() as u32))
+        .map(|x| format!("{:0>len$b}", x, len = nums.len())
+            .chars().enumerate().filter(|&(_, e)| e == '1')
+            .map(|(pos, _)| nums[pos]).collect()).collect()
+}
+
+pub mod iws {
+    trait AsU8 { fn as_u8(&self) -> Vec<Vec<u8>>; }
+    impl AsU8 for Vec<Vec<char>> {
+        fn as_u8(&self) -> Vec<Vec<u8>> {
+            let (n, m) = (self.len(), self[0].len());
+            let mut sol = vec![vec![0; m]; n];
+            (0..n).for_each(|i| (0..m).for_each(|j| sol[i][j] = self[i][j] as u8));
+            sol
+        }
+    }
+
+    struct IterativeWordSearch {
+        board: Vec<Vec<u8>>,
+        n: usize,
+        m: usize,
+
+        word: Vec<u8>,
+        first_char: u8,
+        max_depth: usize,
+
+        visited: Vec<(usize, usize)>,
+        stack: Vec<(usize, usize, usize, bool)>,
+    }
+
+    impl IterativeWordSearch {
+        const DIRECTIONS: [(i32, i32); 4] = [(-1, 0), (1, 0), (0, -1), (0, 1)];
+
+        fn new(board: Vec<Vec<char>>, word: String) -> Self {
+            let board = board.as_u8();
+            Self {
+                first_char: word.as_bytes()[0],
+                max_depth: word.len() - 1,
+                word: word.into_bytes(),
+                n: board.len(),
+                m: board[0].len(),
+                board,
+
+                visited: vec![],
+                stack: vec![],
+            }
+        }
+
+        fn is_valid_cell(&self, x: i32, y: i32) -> bool {
+            x >= 0 && x < self.n as i32 && y >= 0 && y < self.m as i32
+                && !self.visited.contains(&(x as usize, y as usize))
+        }
+        fn find_neighbours(&self, x: usize, y: usize) -> Vec<(usize, usize)> {
+            Self::DIRECTIONS.iter().map(|&(a, b)| (x as i32 + a, y as i32 + b))
+                .filter(|&(x, y)| self.is_valid_cell(x as i32, y as i32))
+                .map(|(x, y)| (x as usize, y as usize)).collect()
+        }
+
+        fn has_position_solution(&mut self, i: usize, j: usize) -> bool {
+            self.visited.clear();
+            self.stack.clear();
+
+            self.stack.push((i, j, 0, false));
+            while let Some((cr, cc, depth, is_backtracking)) = self.stack.pop() {
+                if depth == self.max_depth { return true; }
+                if is_backtracking {
+                    self.visited.remove(self.visited.iter().position(|x| *x == (cr, cc)).unwrap());
+                    continue;
+                }
+
+                self.visited.push((cr, cc));
+                self.stack.push((cr, cc, depth, true));
+                for (nr, nc) in self.find_neighbours(cr, cc) {
+                    if self.board[nr][nc] == self.word[depth + 1] {
+                        self.stack.push((nr, nc, depth + 1, false));
+                    }
+                }
+            }
+            false
+        }
+        fn has_any_solution(&mut self) -> bool {
+            (0..self.n).any(|i| (0..self.m).any(|j| self.board[i][j] == self.first_char && self.has_position_solution(i, j)))
+        }
+    }
+
+
+    pub fn exist(board: Vec<Vec<char>>, word: String) -> bool {
+        IterativeWordSearch::new(board, word).has_any_solution()
+    }
+}
+// endregion
 
 #[cfg(test)]
 mod tests {
     use crate::algorithms::*;
     use crate::utils::Sorted;
+    use crate::algorithms::iws::exist;
     // region [[Done]]
     #[test]
     fn test_title_to_number() {
@@ -586,7 +681,6 @@ mod tests {
                    ].iter().map(|&x| String::from(x)).collect::<Vec<_>>().sorted()
         );
     }
-    // endregion
     #[test]
     fn test_uni_paths_dp() {
         for i in 1..10 {
@@ -594,5 +688,32 @@ mod tests {
                 assert_eq!(unique_paths_dp(i, j), unique_paths(i, j));
             }
         }
+    }
+    #[test]
+    fn test_subsets() {
+        assert_eq!(subsets(vec![1, 2, 3]), vec![vec![], vec![3], vec![2], vec![2, 3], vec![1], vec![1, 3], vec![1, 2], vec![1, 2, 3]]);
+    }
+    // endregion
+    #[test]
+    fn test_exist() {
+        assert_eq!(exist(vec![vec!['s', 'n', 'a', 'k', 'e']], String::from("snake")), true);
+        assert_eq!(exist(vec![vec!['s', 'n', 'a', 'k', 'e']], String::from("snank")), false);
+        assert_eq!(exist(vec![vec!['s', 'n', 'a', 'k', 'e']], String::from("snak")), true);
+        assert_eq!(exist(vec![
+            vec!['k', 'o', 'n', 'g'],
+            vec!['k', 'o', 'p', 'a'],
+            vec!['z', 'o', 'p', 'e']], String::from("kkoppe")), true);
+        assert_eq!(exist(vec![
+            vec!['k', 'o', 'n', 'g'],
+            vec!['k', 'o', 'p', 'a'],
+            vec!['z', 'o', 'p', 'e']], String::from("kkzooooo")), false);
+        assert_eq!(exist(vec![
+            vec!['A', 'B', 'C', 'E'],
+            vec!['S', 'F', 'C', 'S'],
+            vec!['A', 'D', 'E', 'E']], String::from("SEE")), true);
+        assert_eq!(exist(vec![
+            vec!['A', 'B', 'C', 'E'],
+            vec!['S', 'F', 'C', 'S'],
+            vec!['A', 'D', 'E', 'E']], String::from("ABCCED")), true);
     }
 }
