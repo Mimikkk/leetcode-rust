@@ -1,8 +1,7 @@
 use std::collections::HashMap;
+use crate::utils::Sorted;
 use std::cmp::Ordering;
 use std::iter;
-use crate::utils::Sorted;
-use std::fs::read_to_string;
 
 // region [[Skończone]]
 pub fn pascal_triangle_i(num_rows: usize) -> Vec<Vec<i32>> {
@@ -596,7 +595,99 @@ pub mod iws {
         IterativeWordSearch::new(board, word).has_any_solution()
     }
 }
+
+pub fn fizz_buzz(n: i32) -> Vec<String> {
+    (0..n).map(|i| if i % 3 == 0 || i % 5 == 0 { format!("{}{}", if i % 3 == 0 { "Fizz" } else { "" }, if i % 5 == 0 { "Buzz" } else { "" }) } else { i.to_string() }).collect()
+}
+
+pub fn product_except_self(nums: Vec<i32>) -> Vec<i32> {
+    let mut ans = vec![0; nums.len()];
+    ans.iter_mut().zip(nums.iter()).fold(1, |p, (result, n)| {
+        *result = p;
+        p * n
+    });
+    ans.iter_mut().zip(nums.iter()).rev().fold(1, |p, (result, n)| {
+        *result *= p;
+        p * n
+    });
+    ans
+}
+
+pub fn top_k_frequent(nums: Vec<i32>, k: i32) -> Vec<i32> {
+    let mut map: HashMap<i32, usize> = HashMap::new();
+    let mut buckets = vec![vec![]; nums.len()];
+
+    for n in nums { map.entry(n - 1).and_modify(|x| *x += 1).or_default(); }
+    for (&key, &count) in map.iter() { buckets[count].push(key); }
+
+    let mut result = vec![];
+    for bucket in buckets.into_iter().rev() {
+        for n in bucket {
+            result.push(n + 1);
+            if result.len() == k as usize { return result; }
+        }
+    }
+
+    result
+}
+
+pub fn find_kth_largest(mut nums: Vec<i32>, k: i32) -> i32 {
+    nums.sort();
+    nums[nums.len() - k as usize]
+}
+pub fn find_duplicate(mut nums: Vec<i32>) -> i32 {
+    let nums: Vec<usize> = nums.into_iter().map(|x| x as usize).collect();
+    let mut slow = nums[0];
+    let mut fast = nums[0];
+    loop {
+        slow = nums[slow];
+        fast = nums[nums[fast]];
+        if slow == fast {
+            break;
+        }
+    }
+
+    slow = nums[0];
+    while slow != fast {
+        slow = nums[slow];
+        fast = nums[fast];
+    }
+
+    fast as i32
+}
 // endregion
+
+#[derive(PartialEq, Eq, Clone, Debug)]
+pub struct ListNode {
+    pub val: i32,
+    pub next: Option<Box<ListNode>>,
+}
+impl ListNode {
+    #[inline]
+    fn new(val: i32) -> Self {
+        ListNode {
+            next: None,
+            val,
+        }
+    }
+}
+
+type Node = Box<ListNode>;
+pub fn odd_even_list(mut head: Option<Node>) -> Option<Node> {
+    let mut start = head.as_mut();
+
+    // Start Operation
+    let last_odd: Option<&mut Node> = None;
+    let first_even: Option<&mut Node> = None;
+
+
+    // [1,2,3,4,5,6]
+    // [1,3,5,2,4,6]
+
+
+    // Return result
+    head
+}
 
 #[cfg(test)]
 mod tests {
@@ -693,7 +784,6 @@ mod tests {
     fn test_subsets() {
         assert_eq!(subsets(vec![1, 2, 3]), vec![vec![], vec![3], vec![2], vec![2, 3], vec![1], vec![1, 3], vec![1, 2], vec![1, 2, 3]]);
     }
-    // endregion
     #[test]
     fn test_exist() {
         assert_eq!(exist(vec![vec!['s', 'n', 'a', 'k', 'e']], String::from("snake")), true);
@@ -716,4 +806,5 @@ mod tests {
             vec!['S', 'F', 'C', 'S'],
             vec!['A', 'D', 'E', 'E']], String::from("ABCCED")), true);
     }
+    // endregion
 }
