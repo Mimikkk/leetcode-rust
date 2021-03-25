@@ -774,7 +774,75 @@ pub fn is_subsequence_dp(subsequence: String, sequence: String) -> bool {
     }
     dp[m][n] == m
 }
+/// Too Slow!
+pub fn num_matching_subseq(sequence: String, mut subsequences: Vec<String>) -> i32 {
+    let n = subsequences.len();
+    let mut subsequence_iters: Vec<_> = subsequences.iter().map(|ss| ss.chars().rev()).collect();
+    let mut current_chars: Vec<_> = subsequence_iters.iter_mut().map(|x| x.next()).collect();
+
+    for c in sequence.chars().rev() {
+        for i in 0..n {
+            if let Some(other) = current_chars[i] {
+                if other == c { current_chars[i] = subsequence_iters[i].next(); }
+            }
+        }
+    }
+
+    current_chars.into_iter().fold(0, |acc, mut c| acc + c.is_none() as i32)
+}
+
+struct NumArray { range_sum: Vec<i32> }
+
+impl NumArray {
+    fn new(mut nums: Vec<i32>) -> Self {
+        nums.reverse();
+
+        let mut range_sum = vec![];
+        let mut sum_so_far = None;
+        while let Some(num) = nums.pop() {
+            sum_so_far = match sum_so_far {
+                None => Some(num),
+                Some(sum) => Some(sum + num),
+            };
+            range_sum.push(sum_so_far.unwrap());
+        }
+
+        Self { range_sum }
+    }
+
+    fn sum_range(&self, i: i32, j: i32) -> i32 {
+        match (self.range_sum.get((i - 1) as usize), self.range_sum.get(j as usize)) {
+            (Some(&a), Some(&b)) => b - a,
+            (None, Some(&b)) => b,
+            (Some(&a), None) => match self.range_sum.last() {
+                None => 0,
+                Some(&b) => b - a,
+            },
+            (None, None) => 0,
+        }
+    }
+}
+
+pub fn climb_stairs(n: i32) -> i32 {
+    (0..n).fold((1, 1), |(a, b), _| (b, a + b)).0
+}
+
+pub fn climb_stairs_dp(n: i32) -> i32 {
+    let n = n as usize;
+    let mut steps = vec![0; n + 1];
+    steps[0] = 1;
+    steps[1] = 2;
+
+    for i in 2..n { steps[i] = steps[i - 2] + steps[i - 1]; }
+    steps[n - 1] as i32
+}
+
 // endregion
+// int climbStairs(int n) {
+//      for(int i=2;i<n;i++)
+//          steps[i]=steps[i-2]+steps[i-1];
+//      return steps[n-1];
+//  }
 
 #[cfg(test)]
 mod tests {
@@ -901,7 +969,6 @@ mod tests {
         assert_eq!(is_subsequence(String::from("a"), String::from("baba")), true);
         assert_eq!(is_subsequence(String::from("ab"), String::from("bba")), false);
     }
-    // endregion
     #[test]
     fn test_is_subsequence_dp() {
         assert_eq!(is_subsequence_dp(String::from("aa"), String::from("bba")), false);
@@ -910,4 +977,5 @@ mod tests {
         assert_eq!(is_subsequence_dp(String::from("a"), String::from("baba")), true);
         assert_eq!(is_subsequence_dp(String::from("ab"), String::from("bba")), false);
     }
+    // endregion
 }
