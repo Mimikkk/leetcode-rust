@@ -655,7 +655,6 @@ pub fn find_duplicate(mut nums: Vec<i32>) -> i32 {
 
     fast as i32
 }
-// endregion
 
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub struct ListNode {
@@ -674,20 +673,108 @@ impl ListNode {
 
 type Node = Box<ListNode>;
 pub fn odd_even_list(mut head: Option<Node>) -> Option<Node> {
-    let mut start = head.as_mut();
+    let mut odd = Box::new(ListNode::new(-1));
+    let mut cur_odd = &mut odd;
 
-    // Start Operation
-    let last_odd: Option<&mut Node> = None;
-    let first_even: Option<&mut Node> = None;
+    let mut even = Box::new(ListNode::new(-1));
+    let mut cur_even = &mut even;
 
+    let mut has_odd_index = true;
+    while head.is_some() {
+        if has_odd_index {
+            cur_odd.next = head;
+            cur_odd = cur_odd.next.as_mut()?;
+            head = cur_odd.next.take();
+        } else {
+            cur_even.next = head;
+            cur_even = cur_even.next.as_mut()?;
+            head = cur_even.next.take();
+        }
 
-    // [1,2,3,4,5,6]
-    // [1,3,5,2,4,6]
+        // Alternate
+        has_odd_index = !has_odd_index;
+    }
 
-
-    // Return result
-    head
+    // Link odd and even
+    cur_odd.next = even.next;
+    odd.next
 }
+
+pub fn find_length(node: &Option<Node>) -> usize {
+    let mut cur = node.as_ref();
+
+    let mut len = 0;
+    while let Some(n) = cur {
+        len += 1;
+        cur = n.next.as_ref();
+    }
+    len
+}
+
+// towobo
+pub fn split_list_to_parts(root: Option<Node>, k: i32) -> Vec<Option<Node>> {
+    let (len, k) = (find_length(&root), k as usize);
+    let chunk_sizes: Vec<usize> = [vec![len / k + 1; len % k], vec![len / k; k - len % k]].concat();
+
+    for (i, size) in chunk_sizes.into_iter().enumerate() {}
+
+
+    vec![]
+}
+
+pub fn is_subsequence(subsequence: String, sequence: String) -> bool {
+    let mut subsequence_iter = subsequence.chars().rev();
+
+    let mut current = subsequence_iter.next();
+    for c in sequence.chars().rev() {
+        match current {
+            Some(other) => if other == c { current = subsequence_iter.next(); },
+            None => break,
+        }
+    }
+
+    current.is_none()
+}
+
+/*
+/// Init
+int m = s.length(), n = t.length();
+if (m == 0) return true;
+int[][] dp = new int[m+1][n+1];
+for (int  i = 0; i <= m; i++) dp[i] = new int[n+1];
+
+///Memory Allocation
+int[][] dp = new int[m+1][n+1];
+for (int  i = 0; i <= m; ++i) dp[i] = new int[n+1];
+
+///DP part
+for (int i = 1; i <= m; ++i) for (int j = 1; j <= n; ++j)
+        if (s.charAt(i-1) == t.charAt(j-1)) dp[i][j] = dp[i-1][j-1] + 1;
+        else dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]);
+
+///DP Check
+return dp[m][n] == m;
+}
+*/
+pub fn is_subsequence_dp(subsequence: String, sequence: String) -> bool {
+    let (m, n) = (subsequence.len(), sequence.len());
+    if m == 0 { return false; }
+
+    let mut dp: Vec<Vec<usize>> = vec![vec![0; n + 1]; m + 1];
+    let subsequence = subsequence.into_bytes();
+    let sequence = sequence.into_bytes();
+    for i in 1..=m {
+        for j in 1..=n {
+            dp[i][j] = if subsequence[i - 1] == sequence[j - 1] {
+                dp[i - 1][j - 1] + 1
+            } else {
+                dp[i - 1][j].max(dp[i][j - 1])
+            }
+        }
+    }
+    dp[m][n] == m
+}
+// endregion
 
 #[cfg(test)]
 mod tests {
@@ -806,5 +893,21 @@ mod tests {
             vec!['S', 'F', 'C', 'S'],
             vec!['A', 'D', 'E', 'E']], String::from("ABCCED")), true);
     }
+    #[test]
+    fn test_is_subsequence() {
+        assert_eq!(is_subsequence(String::from("aa"), String::from("bba")), false);
+        assert_eq!(is_subsequence(String::from("bba"), String::from("bba")), true);
+        assert_eq!(is_subsequence(String::from("ba"), String::from("bba")), true);
+        assert_eq!(is_subsequence(String::from("a"), String::from("baba")), true);
+        assert_eq!(is_subsequence(String::from("ab"), String::from("bba")), false);
+    }
     // endregion
+    #[test]
+    fn test_is_subsequence_dp() {
+        assert_eq!(is_subsequence_dp(String::from("aa"), String::from("bba")), false);
+        assert_eq!(is_subsequence_dp(String::from("bba"), String::from("bba")), true);
+        assert_eq!(is_subsequence_dp(String::from("ba"), String::from("bba")), true);
+        assert_eq!(is_subsequence_dp(String::from("a"), String::from("baba")), true);
+        assert_eq!(is_subsequence_dp(String::from("ab"), String::from("bba")), false);
+    }
 }
