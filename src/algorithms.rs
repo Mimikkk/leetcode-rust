@@ -837,12 +837,76 @@ pub fn climb_stairs_dp(n: i32) -> i32 {
     steps[n - 1] as i32
 }
 
-// endregion
-// int climbStairs(int n) {
-//      for(int i=2;i<n;i++)
-//          steps[i]=steps[i-2]+steps[i-1];
-//      return steps[n-1];
-//  }
+pub fn intertwine_with_own_middle(nums: Vec<i32>, n: i32) -> Vec<i32> {
+    let n = n as usize;
+
+    let mut result = vec![0; 2 * n];
+    for i in (0..2 * n).step_by(2) {
+        result[i] = nums[i / 2];
+        result[i + 1] = nums[i / 2 + n];
+    }
+
+    result
+}
+
+pub fn maximum_wealth(accounts: Vec<Vec<i32>>) -> i32 {
+    accounts.into_iter().map(|x| x.into_iter().sum()).max().unwrap_or_default()
+}
+
+pub fn num_identical_pairs(nums: Vec<i32>) -> i32 {
+    fn n_choose_2(n: i32) -> i32 {
+        ((n - 1) * n) / 2
+    }
+    let mut map = HashMap::new();
+    for n in nums { map.entry(n).and_modify(|x| *x += 1).or_insert(1); }
+
+    map.into_iter().map(|(_, x)| n_choose_2(x)).sum()
+}
+
+pub fn defang_i_paddr(address: String) -> String {
+    address.replace(".", "[.]")
+}
+
+pub fn kids_with_candies(candies: Vec<i32>, extra_candies: i32) -> Vec<bool> {
+    let max = candies.iter().max().unwrap_or(&0).clone();
+    candies.into_iter().map(|x| x + extra_candies >= max).collect()
+}
+
+pub fn count_jewels_in_stones(jewels: String, stones: String) -> i32 {
+    let mut stone_counter = vec![0; 255];
+
+    for stone in stones.chars() { stone_counter[stone as usize] += 1; }
+    jewels.chars().map(|x| stone_counter[x as usize]).sum()
+}
+
+struct ParkingSystem(i32, i32, i32);
+
+impl ParkingSystem {
+    fn new(big: i32, medium: i32, small: i32) -> Self {
+        Self(big, medium, small)
+    }
+
+    fn add_car(&mut self, car_type: i32) -> bool {
+        match car_type {
+            1 if self.0 > 0 => {
+                self.0 -= 1;
+                true
+            }
+            2 if self.1 > 0 => {
+                self.1 -= 1;
+                true
+            }
+            3 if self.2 > 0 => {
+                self.2 -= 1;
+                true
+            }
+            _ => false
+        }
+    }
+}
+//endregion
+
+mod part2;
 
 #[cfg(test)]
 mod tests {
